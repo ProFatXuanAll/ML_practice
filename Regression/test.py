@@ -36,3 +36,17 @@ print(linear_regression.loss_func(
         que_data_sets,
         ans_data_sets)
      )
+
+print('average loss:')
+print(linear_regression.loss_func(
+        res,
+        que_data_sets,
+        ans_data_sets) / len(ans_data_sets)
+     )
+
+print('rms loss:')
+print((linear_regression.loss_func(
+        res,
+        que_data_sets,
+        ans_data_sets) / len(ans_data_sets)) ** (0.5)
+     )

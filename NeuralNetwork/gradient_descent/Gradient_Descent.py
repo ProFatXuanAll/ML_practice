@@ -85,8 +85,8 @@ class Gradient_Descent:
         w_out = []
         
         #testcodesection
-        #print('iter_time: %d' % iter_time)
-        #print('input vector: ' + w_in.__str__())
+        print('iter_time: %d' % iter_time)
+        print('input vector: ' + w_in.__str__())
         #testcodesection
 
         for index in range(0, self.dim):
