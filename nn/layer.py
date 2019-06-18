@@ -21,7 +21,13 @@ class InputLayer:
         return np.matrix(x)
 
 class FullyConnectedLayer:
-    def __init__(self, input_dim=0, output_dim=0, weights=None, bias=None, activation=None):
+    def __init__(self,
+                 input_dim=0,
+                 output_dim=0,
+                 weights=None,
+                 biases=None,
+                 activation=None):
+
         if type(input_dim) != int:
             raise TypeError('`input_dim` must be `int` type')
         if type(output_dim) != int:
@@ -33,8 +39,20 @@ class FullyConnectedLayer:
         elif activation not in nn.ALL_ACTIVATION_FUNCTION_TYPE:
             raise ValueError('invalid activation function')
 
-        self._w = np.matrix(np.random.random((output_dim, input_dim)))
-        self._b = np.matrix(np.random.random((output_dim, 1)))
+        if weights is None:
+            self._w = np.matrix(np.random.random((output_dim, input_dim)))
+        elif weights.shape != (output_dim, input_dim):
+            raise ValueError('`weights` shape inconsist of `(output_dim, input_dim)`')
+        else:
+            self._w = np.matrix(weights)
+
+        if biases is None:
+            self._b = np.matrix(np.random.random((output_dim, 1)))
+        elif biases.shape != ((output_dim, 1)):
+            raise ValueError('`bias` shape inconsist of `(output_dim, 1)`')
+        else:
+            self._b = np.matrix(biases)
+
         self._f = activation
         self._x = np.matrix(np.zeros((input_dim, 1)))
 

@@ -14,7 +14,13 @@ class Model:
     def layers(self):
         return self._layers
 
-    def add(self, layer=None, units=0, activation=None):
+    def add(self,
+            layer=None,
+            units=0,
+            weights=None,
+            biases=None,
+            activation=None):
+
         if layer not in nn.ALL_LAYERS_TYPE:
             raise RuntimeError('invalid layer')
         elif type(units) != int:
@@ -25,7 +31,12 @@ class Model:
             raise ValueError('invalid activation function')
 
         input_dim = self._layers[-1].output_dim
-        self._layers.append(layer(input_dim=input_dim, output_dim=units, activation=activation))
+
+        self._layers.append(layer(input_dim=input_dim,
+                                  output_dim=units,
+                                  weights=weights,
+                                  biases=biases,
+                                  activation=activation))
 
     def forward_pass(self, x):
         y = np.matrix(x)
