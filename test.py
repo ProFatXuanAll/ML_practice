@@ -1,41 +1,72 @@
 import numpy as np
 import nn
+import nn.activation
 import nn.layer
 import nn.model
 
-###########################
-# test argument input_dim
-###########################
 try:
-    nn.layer.FullyConnectedLayer()
-except ValueError:
-    pass
-except Exception:
-    raise SyntaxError('failed to catch `input_dim` ValueError')
-try:
-    nn.layer.FullyConnectedLayer(input_dim=-1)
-except ValueError:
-    pass
-except Exception:
-    raise SyntaxError('failed to catch `input_dim` ValueError')
+    x = np.matrix(np.ones((2,1)))
 
-try:
-    f = nn.layer.FullyConnectedLayer(input_dim=2, output_dim=3)
-    print('old weight')
-    print(f.weight)
-    f.weight = np.array((1,2,3,4,5,6)).reshape((3,2))
-    print('new weight')
-    print(f.weight)
+    m1 = nn.model.Model(units=2)
+    m1.add(layer=nn.layer.FullyConnectedLayer, units=4, activation=nn.activation.sigmoid)
 
-    print('old bias')
-    print(f.bias)
-    f.bias = np.array((7,8,9)).reshape(3,1)
-    print('new bias')
-    print(f.bias)
+    layers1 = m1.layers
+    layers1[1].weight = np.ones((4,2))
+    layers1[1].bias = np.ones((4,1))
+
+    print(m1.forward_pass(x))
+
+    m1_w = np.matrix(np.ones((4,2)))
+    m1_b = np.matrix(np.ones((4,1)))
+    y1 = nn.activation.sigmoid(m1_w.dot(x) + m1_b)
+
+    print(y1)
+
+    m2 = nn.model.Model(units=4)
+    m2.add(layer=nn.layer.FullyConnectedLayer, units=3, activation=nn.activation.sigmoid)
+
+    layers2 = m2.layers
+    layers2[1].weight = np.ones((3,4))
+    layers2[1].bias = np.ones((3,1))
+
+    print(m2.forward_pass(y1))
+
+    m2_w = np.matrix(np.ones((3,4)))
+    m2_b = np.matrix(np.ones((3,1)))
+    y2 = nn.activation.sigmoid(m2_w.dot(y1) + m2_b)
+
+    print(y2)
+
+    m3 = nn.model.Model(units=3)
+    m3.add(layer=nn.layer.FullyConnectedLayer, units=5, activation=nn.activation.sigmoid)
+
+    layers3 = m3.layers
+    layers3[1].weight = np.ones((5,3))
+    layers3[1].bias = np.ones((5,1))
+
+    print(m3.forward_pass(y2))
+
+    m3_w = np.matrix(np.ones((5,3)))
+    m3_b = np.matrix(np.ones((5,1)))
+    y3 = nn.activation.sigmoid(m3_w.dot(y2) + m3_b)
+
+    print(y3)
 
     m = nn.model.Model(units=2)
-    m.add(layer=nn.layer.FullyConnectedLayer, units=4)
-    m.add(layer=nn.layer.FullyConnectedLayer, units=3)
+    m.add(layer=nn.layer.FullyConnectedLayer, units=4, activation=nn.activation.sigmoid)
+    m.add(layer=nn.layer.FullyConnectedLayer, units=3, activation=nn.activation.sigmoid)
+    m.add(layer=nn.layer.FullyConnectedLayer, units=5, activation=nn.activation.sigmoid)
+
+    layers = m.layers
+    layers[1].weight = np.ones((4,2))
+    layers[1].bias = np.ones((4,1))
+    layers[2].weight = np.ones((3,4))
+    layers[2].bias = np.ones((3,1))
+    layers[3].weight = np.ones((5,3))
+    layers[3].bias = np.ones((5,1))
+
+    print(m.forward_pass(x))
+
 except Exception as e:
     print(str(e))
 
