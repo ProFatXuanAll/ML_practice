@@ -20,6 +20,9 @@ class InputLayer:
     def forward_pass(self, x):
         return np.matrix(x)
 
+    def backward_pass(self, dL_dy):
+        return dL_dy
+
 class FullyConnectedLayer:
     def __init__(self,
                  input_dim=0,
@@ -55,6 +58,8 @@ class FullyConnectedLayer:
 
         self._f = activation
         self._x = np.matrix(np.zeros((input_dim, 1)))
+        self._wxb = np.matrix(np.zeros((output_dim, 1)))
+        self._y = np.matrix(np.zeros((output_dim, 1)))
 
     @property
     def weight(self):
@@ -86,4 +91,23 @@ class FullyConnectedLayer:
 
     def forward_pass(self, x):
         self._x = np.matrix(x)
-        return self._f(self._w.dot(self._x) + self._b)
+        self._wxb = self._w.dot(self._x) + self._b
+        self._y = self._f(self._wxb)
+        return self._y
+
+    def backward_pass(self, dL_dy):
+        # dL_dw = dL_dy * dy_dwxb * dwxb_dw
+        # dL_db = dL_dy * dy_dwxb * dwxb_db
+        # dL_dx = dL_dy * dy_dx
+
+        dy_dwxb = self._f.d(self._wxb)
+        dL_dwxb = dL_dy.dot(dy_dwxb)
+        dwxb_dw = self._x.T.repeat(self.output_dim, axis=0)
+        dL_dw = dL_dwxb.dot(dwxb_dw)
+        dL_db = dL_dwxb.dot(np.matrix(np.ones((self.output_dim, 1))))
+        dL_dx = np.sum(dL_dy.T.dot(self._w), axis=0) # y1*w11+y2*w21+y3*w31 & y1*w12+y2*w22+y3*w32 & y=mx1 & w=mxn
+
+        self._w = self._w - 0.001 * dL_dw
+        self._b = self._b - 0.001 * dL_db
+
+        return np.matrix(np.diag(np.array(dL_dx).squeeze()))

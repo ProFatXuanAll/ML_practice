@@ -38,8 +38,23 @@ class Model:
                                   biases=biases,
                                   activation=activation))
 
+    def compile(self, loss=None):
+        if loss not in nn.ALL_LOSS_FUNCTION_TYPE:
+            raise RuntimeError('invalid loss function')
+
+        self._l = loss
+
     def forward_pass(self, x):
         y = np.matrix(x)
         for layer in self._layers:
             y = layer.forward_pass(y)
         return y
+
+    def compute_loss(self, x, y):
+        return self._l(self.forward_pass(x), y)
+
+    def backward_pass(self, x, y):
+        dL_dy = self._l.d(self.forward_pass(x), y)
+
+        for layer in reversed(self._layers):
+            dL_dy = layer.backward_pass(dL_dy)
