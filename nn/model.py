@@ -1,7 +1,6 @@
 import numpy as np
 import nn
 import nn.layer
-
 class Model:
     def __init__(self, units=0):
         if type(units) != int:
@@ -44,17 +43,29 @@ class Model:
 
         self._l = loss
 
-    def forward_pass(self, x):
+    def predict(self, x):
         y = np.matrix(x)
         for layer in self._layers:
-            y = layer.forward_pass(y)
+            y = layer.predict(y)
         return y
 
-    def compute_loss(self, x, y):
-        return self._l(self.forward_pass(x), y)
+    def compute_loss(self, xlist, ylist):
+        e = 0
+        for x, y in zip(xlist, ylist):
+            x = np.matrix(x).T
+            y = np.matrix(y).T
+            e += self._l(self.predict(x), y)
 
-    def backward_pass(self, x, y):
-        dL_dy = self._l.d(self.forward_pass(x), y)
+        return e / len(ylist)
 
+    def back_propagation(self, x, y):
+        dL_dy = self._l.d(self.predict(x), y)
         for layer in reversed(self._layers):
-            dL_dy = layer.backward_pass(dL_dy)
+            dL_dy = layer.back_propagation(dL_dy)
+        return dL_dy
+
+    def fit(self, xlist, ylist):
+        for i in range(len(xlist)):
+            x = np.matrix(xlist[i]).T
+            y = np.matrix(ylist[i]).T
+            self.back_propagation(x, y)

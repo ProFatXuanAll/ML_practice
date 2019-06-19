@@ -4,94 +4,63 @@ import nn.activation
 import nn.layer
 import nn.loss
 import nn.model
+import matplotlib.pyplot as plt
 
 try:
-    x = np.matrix(np.ones((2,1)))
-    y = np.matrix(np.ones((5,1)))
+    # m = nn.model.Model(units=5)
+    # m.add(layer=nn.layer.FullyConnectedLayer,
+    #       units=4,
+    #       activation=nn.activation.sigmoid)
+    # m.add(layer=nn.layer.FullyConnectedLayer,
+    #       units=3,
+    #       activation=nn.activation.sigmoid)
+    # m.add(layer=nn.layer.FullyConnectedLayer,
+    #       units=2,
+    #       activation=nn.activation.sigmoid)
+    # m.add(layer=nn.layer.FullyConnectedLayer,
+    #       units=1,
+    #       activation=nn.activation.sigmoid)
+    # m.compile(loss=nn.loss.square)
 
-    m1_w = np.matrix(np.ones((4,2)))
-    m1_b = np.matrix(np.ones((4,1)))
-    y1 = nn.activation.sigmoid(m1_w.dot(x) + m1_b)
+    # target_function = lambda x1, x2, x3, x4, x5: (x1+x2)*x3*(x4+x5)
+    # xlist = np.random.random((1, 5))
+    # ylist = np.array([[target_function(*x)] for x in xlist])
 
-    m2_w = np.matrix(np.ones((3,4)))
-    m2_b = np.matrix(np.ones((3,1)))
-    y2 = nn.activation.sigmoid(m2_w.dot(y1) + m2_b)
-
-    m3_w = np.matrix(np.ones((5,3)))
-    m3_b = np.matrix(np.ones((5,1)))
-    y3 = nn.activation.sigmoid(m3_w.dot(y2) + m3_b)
-
-    m1 = nn.model.Model(units=2)
-    m1.add(layer=nn.layer.FullyConnectedLayer,
-           units=4,
-           weights=m1_w,
-           biases=m1_b,
-           activation=nn.activation.sigmoid)
-
-    print('m1 forward pass')
-    print(m1.forward_pass(x))
-    print('m1 direct calculate')
-    print(y1)
-    print('-------------------')
-
-    m2 = nn.model.Model(units=4)
-    m2.add(layer=nn.layer.FullyConnectedLayer,
-           units=3,
-           weights=m2_w,
-           biases=m2_b,
-           activation=nn.activation.sigmoid)
-
-    print('m2 forward pass')
-    print(m2.forward_pass(y1))
-    print('m2 direct calculate')
-    print(y2)
-    print('-------------------')
-
-    m3 = nn.model.Model(units=3)
-    m3.add(layer=nn.layer.FullyConnectedLayer,
-           units=5,
-           weights=m3_w,
-           biases=m3_b,
-           activation=nn.activation.sigmoid)
-
-    print('m3 forward pass')
-    print(m3.forward_pass(y2))
-    print('m3 direct calculate')
-    print(y3)
-    print('-------------------')
-
-    m = nn.model.Model(units=2)
+    m = nn.model.Model(units=1)
     m.add(layer=nn.layer.FullyConnectedLayer,
-          units=4,
-          weights=m1_w,
-          biases=m1_b,
+          units=10,
           activation=nn.activation.sigmoid)
     m.add(layer=nn.layer.FullyConnectedLayer,
-          units=3,
-          weights=m2_w,
-          biases=m2_b,
+          units=10,
           activation=nn.activation.sigmoid)
     m.add(layer=nn.layer.FullyConnectedLayer,
-          units=5,
-          weights=m3_w,
-          biases=m3_b,
+          units=10,
+          activation=nn.activation.sigmoid)
+    m.add(layer=nn.layer.FullyConnectedLayer,
+          units=10,
+          activation=nn.activation.sigmoid)
+    m.add(layer=nn.layer.FullyConnectedLayer,
+          units=1,
           activation=nn.activation.sigmoid)
     m.compile(loss=nn.loss.square)
 
-    print('m forward pass')
-    print(m.forward_pass(x))
-    print('m direct calculate')
-    print(y3)
-    print('-------------------')
+    # xlist = np.linspace(-50,50,1000)
+    # ylist = np.square(xlist)
+    xlist = np.linspace(-5,5,10)
+    ylist = np.square(xlist)
 
-    print('m compute loss')
-    print(m.compute_loss(x, y))
-    print('direct compute loss')
-    print(nn.loss.square(y3, y))
-    print('-------------------')
+    for epoch in range(100):
+        m.fit(xlist, ylist)
+        print('epoch {}, loss: {}'.format(epoch, m.compute_loss(xlist, ylist)))
 
-    print('m backward pass')
-    m.backward_pass(x, y)
+    plt.plot(np.linspace(-50,50,1000),
+             np.square(np.linspace(-50,50,1000)),
+             label='square')
+    plt.plot(np.linspace(-50,50,1000),
+             [np.sum(m.predict(x)) for x in np.linspace(-50,50,1000)],
+             label='test')
+    plt.legend()
+    plt.show()
 
 except Exception as e:
     print(str(e))

@@ -1,11 +1,12 @@
 import numpy as np
+import nn.utils
 
 def square(predict_y, actual_y):
     return np.square(predict_y - actual_y)
 
 def d_square(predict_y, actual_y):
     elementwise = np.array(0.5 * (predict_y - actual_y))
-    return np.matrix(np.diag(elementwise.squeeze()))
+    return nn.utils.diagnalize(elementwise)
 
 square.d = d_square
 del d_square
