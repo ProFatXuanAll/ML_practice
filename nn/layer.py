@@ -44,14 +44,14 @@ class FullyConnectedLayer:
             raise ValueError('invalid activation function')
 
         if weights is None:
-            self._w = np.matrix(np.random.random((output_dim, input_dim)))
+            self._w = np.matrix(np.random.random((output_dim, input_dim))) - 0.5
         elif weights.shape != (output_dim, input_dim):
             raise ValueError('`weights` shape inconsist of `(output_dim, input_dim)`')
         else:
             self._w = np.matrix(weights)
 
         if biases is None:
-            self._b = np.matrix(np.random.random((output_dim, 1)))
+            self._b = np.matrix(np.random.random((output_dim, 1))) - 0.5
         elif biases.shape != ((output_dim, 1)):
             raise ValueError('`bias` shape inconsist of `(output_dim, 1)`')
         else:
@@ -63,24 +63,24 @@ class FullyConnectedLayer:
         self._y = np.matrix(np.zeros((output_dim, 1)))
 
     @property
-    def weight(self):
+    def weights(self):
         return self._w
 
-    @weight.setter
-    def weight(self, new_weight):
-        if self._w.shape != new_weight.shape:
+    @weights.setter
+    def weights(self, new_weights):
+        if self._w.shape != new_weights.shape:
             raise ValueError('shape inconsistent of new weight')
-        self._w = np.matrix(new_weight)
+        self._w = np.matrix(new_weights)
 
     @property
-    def bias(self):
+    def biases(self):
         return self._b
 
-    @bias.setter
-    def bias(self, new_bias):
-        if self._b.shape != new_bias.shape:
-            raise ValueError('shape inconsistent of new bias')
-        self._b = np.matrix(new_bias)
+    @biases.setter
+    def biases(self, new_biases):
+        if self._b.shape != new_biases.shape:
+            raise ValueError('shape inconsistent of new biases')
+        self._b = np.matrix(new_biases)
 
     @property
     def input_dim(self):
@@ -108,7 +108,7 @@ class FullyConnectedLayer:
         dL_db = dL_dwxb.dot(np.matrix(np.ones((self.output_dim, 1))))
         dL_dx = np.sum(dL_dy.T.dot(self._w), axis=0) # y1*w11+y2*w21+y3*w31 & y1*w12+y2*w22+y3*w32 & y=mx1 & w=mxn
 
-        self._w = self._w - dL_dw
-        self._b = self._b - dL_db
+        self._w = self._w - 0.0001 * dL_dw
+        self._b = self._b - 0.0001 * dL_db
 
         return nn.utils.diagnalize(dL_dx.T)

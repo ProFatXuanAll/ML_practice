@@ -126,3 +126,4 @@ dmypy.json
 # Editor
 .vscode
 *.swap
+.idea

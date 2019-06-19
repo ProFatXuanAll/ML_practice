@@ -4,6 +4,7 @@ import nn.loss
 
 ALL_ACTIVATION_FUNCTION_TYPE = [
     nn.activation.sigmoid,
+    nn.activation.linear,
 ]
 
 ALL_LOSS_FUNCTION_TYPE = [
