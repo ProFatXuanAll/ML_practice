@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+matplotlib = "3.4.1"
+numpy = "1.20.2"
+pandas = "1.2.3"
+scipy = "1.6.2"
+sklearn = "0.0"
+tqdm = "4.60.0"
+
+[dev-packages]
+autopep8 = "1.5.6"
+flake8 = "3.9.0"
+isort = "5.8.0"
+pytest = "6.2.3"
+
+[requires]
+python_version = "3.8"
