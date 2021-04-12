@@ -12,8 +12,8 @@ class Variable:
         Gradient-flow graph for backward pass.
         Each flow consists of two input units and one output unit.
         Output unit will contain references for both input units.
-        Each referenced input unit will contain first and second order partial
-        derivatives of output with respect to input.
+        Each referenced input unit will contain first order partial derivatives
+        of output with respect to input.
         Parital derivatives were determined previously per operations.
     priority: int
         Priority used to determine which variable get popped from priority
@@ -25,79 +25,81 @@ class Variable:
         - If variable were created during forward pass, then priority is set to
           the largest priority of the two operands plus ``1`` (which priority
           is larger then both operands).
-    grad_1st: float
+    grad: float
         First order derivatives of output with respect to input.
-    grad_2nd: float
-        Second order derivatives of output with respect to input.
-    value: float
+    val: float
+        Value of the variable.
+
+    Parameters
+    ==========
+    val: float
         Value of the variable.
     """
 
-    def __init__(self, value: float):
+    def __init__(self, val: float):
         self.priority: int = 0
         self.bp_graph: List[Tuple[Variable, float, float]] = []
-        self.grad_1st: float = 0.0
-        self.grad_2nd: float = 0.0
-        self.value: float = float(value)
+        self.grad: float = 0.0
+        self.val: float = float(val)
 
     def __float__(self) -> float:
-        r"""Return ``self.value``."""
-        return self.value
+        r"""Return ``self.val``."""
+        return self.val
 
     def __int__(self) -> int:
-        r"""Return ``int(self.value)``."""
-        return int(self.value)
+        r"""Return ``int(self.val)``."""
+        return int(self.val)
 
     def __repr__(self) -> str:
         r"""Format output on terminal."""
-        return f'{self.__class__.__name__}({self.value})'
+        return f'{self.__class__.__name__}({self.val})'
 
     def __str__(self) -> str:
-        r"""Return ``str(self.value)``."""
-        return str(self.value)
+        r"""Return ``str(self.val)``."""
+        return str(self.val)
 
     def __eq__(self, r_op: Any) -> bool:
         r"""Equality operation ``self == r_op``."""
         if id(self) == id(r_op):
             return True
         elif isinstance(r_op, Variable):
-            return self.value == r_op.value
+            return self.val == r_op.val
         elif isinstance(r_op, (float, int)):
-            return self.value == r_op
+            return self.val == r_op
         return False
 
     def __req__(self, l_op: Any) -> bool:
         r"""Equality operation ``l_op == self``."""
         if isinstance(l_op, (float, int)):
-            return l_op == self.value
+            return l_op == self.val
         return False
 
     def __lt__(self, r_op: Any) -> bool:
         r"""Equality operation ``self < r_op``."""
         if isinstance(r_op, Variable):
-            return self.value < r_op.value
+            return self.val < r_op.val
         elif isinstance(r_op, (float, int)):
-            return self.value < r_op
+            return self.val < r_op
         return False
 
     def __rlt__(self, l_op: Any) -> bool:
         r"""Equality operation ``l_op < self``."""
         if isinstance(l_op, (float, int)):
-            return self.value > l_op.value
+            return self.val > l_op.val
         return False
 
     def __gt__(self, r_op: Any) -> bool:
         r"""Equality operation ``self > r_op``."""
         if isinstance(r_op, Variable):
-            return self.value > r_op.value
+            return self.val > r_op.val
         elif isinstance(r_op, (float, int)):
-            return self.value > r_op
+            return self.val > r_op
         return False
 
     def __rgt__(self, l_op: Any) -> bool:
         r"""Equality operation ``l_op > self``."""
         if isinstance(l_op, (float, int)):
-            return self.value < l_op.value
+            return self.val < l_op.val
         return False
 
     def __add__(self, r_op: Any):
@@ -105,13 +107,13 @@ class Variable:
         out = Variable(0.0)
 
         if isinstance(r_op, Variable):
-            out.value = self.value + r_op.value
-            out.bp_graph.append((self, 1.0, 0.0))
-            out.bp_graph.append((r_op, 1.0, 0.0))
+            out.val = self.val + r_op.val
+            out.bp_graph.append((self, 1.0))
+            out.bp_graph.append((r_op, 1.0))
             out.priority = max(self.priority, r_op.priority) + 1
         elif isinstance(r_op, (float, int)):
-            out.value = self.value + r_op
-            out.bp_graph.append((self, 1.0, 0.0))
+            out.val = self.val + r_op
+            out.bp_graph.append((self, 1.0))
             out.priority = self.priority + 1
         else:
             return NotImplemented
@@ -122,8 +124,8 @@ class Variable:
         out = Variable(0.0)
 
         if isinstance(l_op, (float, int)):
-            out.value = l_op + self.value
-            out.bp_graph.append((self, 1.0, 0.0))
+            out.val = l_op + self.val
+            out.bp_graph.append((self, 1.0))
             out.priority = self.priority + 1
             return out
         return NotImplemented
@@ -133,13 +135,13 @@ class Variable:
         out = Variable(0.0)
 
         if isinstance(r_op, Variable):
-            out.value = self.value * r_op.value
-            out.bp_graph.append((self, r_op.value, 0.0))
-            out.bp_graph.append((r_op, self.value, 0.0))
+            out.val = self.val * r_op.val
+            out.bp_graph.append((self, r_op.val))
+            out.bp_graph.append((r_op, self.val))
             out.priority = max(self.priority, r_op.priority) + 1
         elif isinstance(r_op, (float, int)):
-            out.value = self.value * r_op
-            out.bp_graph.append((self, r_op, 0.0))
+            out.val = self.val * r_op
+            out.bp_graph.append((self, r_op))
             out.priority = self.priority + 1
         else:
             return NotImplemented
@@ -150,8 +152,8 @@ class Variable:
         out = Variable(0.0)
 
         if isinstance(l_op, (float, int)):
-            out.value = l_op * self.value
-            out.bp_graph.append((self, l_op, 0.0))
+            out.val = l_op * self.val
+            out.bp_graph.append((self, l_op))
             out.priority = self.priority + 1
             return out
         return NotImplemented
@@ -161,13 +163,13 @@ class Variable:
         out = Variable(0.0)
 
         if isinstance(r_op, Variable):
-            out.value = self.value - r_op.value
-            out.bp_graph.append((self, 1.0, 0.0))
-            out.bp_graph.append((r_op, -1.0, 0.0))
+            out.val = self.val - r_op.val
+            out.bp_graph.append((self, 1.0))
+            out.bp_graph.append((r_op, -1.0))
             out.priority = max(self.priority, r_op.priority) + 1
         elif isinstance(r_op, (float, int)):
-            out.value = self.value - r_op
-            out.bp_graph.append((self, 1.0, 0.0))
+            out.val = self.val - r_op
+            out.bp_graph.append((self, 1.0))
             out.priority = self.priority + 1
         else:
             return NotImplemented
@@ -178,8 +180,8 @@ class Variable:
         out = Variable(0.0)
 
         if isinstance(l_op, (float, int)):
-            out.value = l_op - self.value
-            out.bp_graph.append((self, -1.0, 0.0))
+            out.val = l_op - self.val
+            out.bp_graph.append((self, -1.0))
             out.priority = self.priority + 1
             return out
         return NotImplemented
@@ -189,17 +191,13 @@ class Variable:
         out = Variable(0.0)
 
         if isinstance(r_op, Variable):
-            out.value = self.value / r_op.value
-            out.bp_graph.append((self, 1 / r_op.value, 0.0))
-            out.bp_graph.append((
-                r_op,
-                -self.value * (r_op.value ** (-2)),
-                2 * self.value * (r_op.value ** (-3)),
-            ))
+            out.val = self.val / r_op.val
+            out.bp_graph.append((self, 1 / r_op.val))
+            out.bp_graph.append((r_op, -self.val * (r_op.val ** (-2))))
             out.priority = max(self.priority, r_op.priority) + 1
         elif isinstance(r_op, (float, int)):
-            out.value = self.value / r_op
-            out.bp_graph.append((self, 1 / r_op, 0.0))
+            out.val = self.val / r_op
+            out.bp_graph.append((self, 1 / r_op))
             out.priority = self.priority + 1
         else:
             return NotImplemented
@@ -210,12 +208,8 @@ class Variable:
         out = Variable(0.0)
 
         if isinstance(l_op, (float, int)):
-            out.value = l_op / self.value
-            out.bp_graph.append((
-                self,
-                -l_op * (self.value ** (-2)),
-                2 * l_op * (self.value ** (-3)),
-            ))
+            out.val = l_op / self.val
+            out.bp_graph.append((self, -l_op * (self.val ** (-2))))
             out.priority = self.priority + 1
             return out
         return NotImplemented
@@ -225,26 +219,19 @@ class Variable:
         out = Variable(0.0)
 
         if isinstance(r_op, Variable):
-            out.value = self.value ** r_op.value
+            out.val = self.val ** r_op.val
             out.bp_graph.append((
                 self,
-                r_op.value * (self.value ** (r_op.value - 1)),
-                r_op.value * (r_op.value - 1) *
-                (self.value ** (r_op.value - 2)),
+                r_op.val * (self.val ** (r_op.val - 1)),
             ))
             out.bp_graph.append((
                 r_op,
-                math.log(self.value) * (self.value ** r_op.value),
-                math.log(self.value ** 2) * (self.value ** r_op.value),
+                math.log(self.val) * (self.val ** r_op.val),
             ))
             out.priority = max(self.priority, r_op.priority) + 1
         elif isinstance(r_op, (float, int)):
-            out.value = self.value ** r_op
-            out.bp_graph.append((
-                self,
-                r_op * (self.value ** (r_op - 1)),
-                r_op * (r_op - 1) * (self.value ** (r_op - 2)),
-            ))
+            out.val = self.val ** r_op
+            out.bp_graph.append((self, r_op * (self.val ** (r_op - 1))))
             out.priority = self.priority + 1
         else:
             return NotImplemented
@@ -255,12 +242,8 @@ class Variable:
         out = Variable(0.0)
 
         if isinstance(l_op, (float, int)):
-            out.value = l_op ** self.value
-            out.bp_graph.append((
-                self,
-                self.value * (r_op ** (self.value - 1)),
-                self.value * (self.value - 1) * (r_op ** (self.value - 2)),
-            ))
+            out.val = l_op ** self.val
+            out.bp_graph.append((self, math.log(l_op) * (l_op ** self.val)))
             out.priority = self.priority + 1
             return out
         return NotImplemented
@@ -270,10 +253,9 @@ class Variable:
         q = PriorityQueue()
         is_put = {id(self): True}
 
-        for nxt_var, nxt_grad_1st, nxt_grad_2nd in self.bp_graph:
+        for nxt_var, nxt_grad in self.bp_graph:
             # Initial gradients are scaled by 1.0.
-            nxt_var.grad_1st += nxt_grad_1st
-            nxt_var.grad_2nd += nxt_grad_2nd
+            nxt_var.grad += nxt_grad
             q.put((
                 # Next variable's priority in queue.
                 -nxt_var.priority,
@@ -286,14 +268,13 @@ class Variable:
         while not q.empty():
             _, cur_var = q.get()
 
-            for nxt_var, nxt_grad_1st, nxt_grad_2nd in cur_var.bp_graph:
+            for nxt_var, nxt_grad in cur_var.bp_graph:
                 # Each forward pass will contribute gradient.
                 # The formula for backward pass gradient is:
                 # backward gradient times local gradient.
-                # Here backward gradient means `cur_var.grad_*`
-                # and local gradient means `nxt_grad_*`.
-                nxt_var.grad_1st += cur_var.grad_1st * nxt_grad_1st
-                nxt_var.grad_2nd += cur_var.grad_2nd * nxt_grad_2nd
+                # Here backward gradient means `cur_var.grad`
+                # and local gradient means `nxt_grad`.
+                nxt_var.grad += cur_var.grad * nxt_grad
 
                 # Do not put same node into queue twice.
                 if id(nxt_var) not in is_put:
@@ -310,10 +291,9 @@ class Variable:
         q = Queue()
 
         self.priority = 0
-        self.grad_1st = 0.0
-        self.grad_2nd = 0.0
+        self.grad = 0.0
 
-        for nxt_var, _, _ in self.bp_graph:
+        for nxt_var, _ in self.bp_graph:
             q.put(nxt_var)
 
         self.bp_graph.clear()
@@ -322,10 +302,9 @@ class Variable:
         while not q.empty():
             cur_var = q.get()
             cur_var.priority = 0
-            cur_var.grad_1st = 0.0
-            cur_var.grad_2nd = 0.0
+            cur_var.grad = 0.0
 
-            for nxt_var, _, _ in cur_var.bp_graph:
+            for nxt_var, _ in cur_var.bp_graph:
                 q.put(nxt_var)
 
             cur_var.bp_graph.clear()
@@ -342,4 +321,4 @@ def coerce(value: Any) -> Variable:
 
 
 def copy(var: Variable):
-    return Variable(var.value)
+    return Variable(var.val)
