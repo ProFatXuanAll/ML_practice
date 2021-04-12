@@ -1,5 +1,5 @@
 import math
-from queue import Queue, PriorityQueue
+from queue import PriorityQueue, Queue
 from typing import Any, List, Tuple
 
 
@@ -328,6 +328,110 @@ class Variable:
 
         return out
 
+    def exp(self):
+        r"""Exponential operation ``exp(self)``."""
+        out = Variable(math.exp(self.val))
+        out.bp_graph.append((self, math.exp(self.val)))
+        out.priority = self.priority + 1
+        return out
+
+    def log(self):
+        r"""Logarithm operation ``log(self)``."""
+        out = Variable(math.log(self.val))
+        out.bp_graph.append((self, 1 / self.val))
+        out.priority = self.priority + 1
+        return out
+
+    def sin(self):
+        r"""Trigonometric operation ``sin(self)``."""
+        out = Variable(math.sin(self.val))
+        out.bp_graph.append((self, math.cos(self.val)))
+        out.priority = self.priority + 1
+        return out
+
+    def cos(self):
+        r"""Trigonometric operation ``cos(self)``."""
+        out = Variable(math.cos(self.val))
+        out.bp_graph.append((self, -math.sin(self.val)))
+        out.priority = self.priority + 1
+        return out
+
+    def tan(self):
+        r"""Trigonometric operation ``tan(self)``."""
+        out = Variable(math.tan(self.val))
+        out.bp_graph.append((self, 1 + (math.tan(self.val) ** 2)))
+        out.priority = self.priority + 1
+        return out
+
+    def sinh(self):
+        r"""Hyperbolic operation ``sinh(self)``."""
+        out = Variable(math.sinh(self.val))
+        out.bp_graph.append((self, math.cosh(self.val)))
+        out.priority = self.priority + 1
+        return out
+
+    def cosh(self):
+        r"""Hyperbolic operation ``cosh(self)``."""
+        out = Variable(math.cosh(self.val))
+        out.bp_graph.append((self, math.sinh(self.val)))
+        out.priority = self.priority + 1
+        return out
+
+    def tanh(self):
+        r"""Hyperbolic operation ``tanh(self)``."""
+        out = Variable(math.tanh(self.val))
+        out.bp_graph.append((self, 1 - (math.tanh(self.val) ** 2)))
+        out.priority = self.priority + 1
+        return out
+
+    def max(self, r_op: Any):
+        r"""Comparison operation ``max(self, r_op)``"""
+        out = Variable(0.0)
+
+        if isinstance(r_op, Variable):
+            out.val = max(self.val, r_op.val)
+            if out.val == self.val:
+                out.bp_graph.append((self, 1.0))
+                out.bp_graph.append((r_op, 0.0))
+            else:
+                out.bp_graph.append((self, 0.0))
+                out.bp_graph.append((r_op, 1.0))
+            out.priority = max(self.priority, r_op.priority) + 1
+        elif isinstance(r_op, (float, int)):
+            out.val = max(self.val, r_op)
+            if out.val == self.val:
+                out.bp_graph.append((self, 1.0))
+            else:
+                out.bp_graph.append((self, 0.0))
+            out.priority = self.priority + 1
+        else:
+            return NotImplemented
+        return out
+
+    def min(self, r_op: Any):
+        r"""Comparison operation ``min(self, r_op)``"""
+        out = Variable(0.0)
+
+        if isinstance(r_op, Variable):
+            out.val = min(self.val, r_op.val)
+            if out.val == self.val:
+                out.bp_graph.append((self, 1.0))
+                out.bp_graph.append((r_op, 0.0))
+            else:
+                out.bp_graph.append((self, 0.0))
+                out.bp_graph.append((r_op, 1.0))
+            out.priority = max(self.priority, r_op.priority) + 1
+        elif isinstance(r_op, (float, int)):
+            out.val = min(self.val, r_op)
+            if out.val == self.val:
+                out.bp_graph.append((self, 1.0))
+            else:
+                out.bp_graph.append((self, 0.0))
+            out.priority = self.priority + 1
+        else:
+            return NotImplemented
+        return out
+
     def backward_pass(self):
         r"""Backward pass algorithm."""
         q = PriorityQueue()
@@ -369,7 +473,7 @@ class Variable:
                 is_put[id(nxt_var)] = True
 
     def reset_bp_graph(self):
-        r"""Reset backward pass graph and all priorities and gradients in the graph."""
+        r"""Reset all attributes but not ``self.val``."""
         q = Queue()
 
         self.priority = 0
