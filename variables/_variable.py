@@ -133,12 +133,12 @@ class Variable:
 
         if isinstance(r_op, Variable):
             out.value = out.value * r_op.value
-            out.bp_graph.append((self, r_op.value, 1.0))
-            out.bp_graph.append((r_op, self.value, 1.0))
+            out.bp_graph.append((self, r_op.value, 0.0))
+            out.bp_graph.append((r_op, self.value, 0.0))
             out.priority = max(out.priority, r_op.priority + 1)
         elif isinstance(r_op, (float, int)):
             out.value = out.value * r_op
-            out.bp_graph.append((self, r_op, 1.0))
+            out.bp_graph.append((self, r_op, 0.0))
         else:
             return NotImplemented
         return out
@@ -147,9 +147,10 @@ class Variable:
         r"""Multiplication operation ``l_op * self``."""
         out = Variable(self.value)
         out.priority = self.priority + 1
+
         if isinstance(l_op, (float, int)):
             out.value = out.value * l_op
-            out.bp_graph.append((self, l_op, 1.0))
+            out.bp_graph.append((self, l_op, 0.0))
             return out
         return NotImplemented
 
@@ -182,16 +183,38 @@ class Variable:
 
     def __truediv__(self, r_op: Any):
         r"""Division operation ``self / r_op``."""
+        out = Variable(self.value)
+        out.priority = self.priority + 1
+
         if isinstance(r_op, Variable):
-            return Variable(self.value / r_op.value)
+            out.value = out.value / r_op.value
+            out.bp_graph.append((self, 1 / r_op.value, 0.0))
+            out.bp_graph.append((
+                r_op,
+                -self.value * (r_op.value ** (-2)),
+                2 * self.value * (r_op.value ** (-3)),
+            ))
+            out.priority = max(out.priority, r_op.priority + 1)
         elif isinstance(r_op, (float, int)):
-            return Variable(self.value / r_op)
-        return NotImplemented
+            out.value = out.value / r_op
+            out.bp_graph.append((self, 1 / r_op, 0.0))
+        else:
+            return NotImplemented
+        return out
 
     def __rtruediv__(self, l_op: Any):
         r"""Division operation ``l_op / self``."""
+        out = Variable(self.value)
+        out.priority = self.priority + 1
+
         if isinstance(l_op, (float, int)):
-            return Variable(l_op / self.value)
+            out.value = l_op / out.value
+            out.bp_graph.append((
+                self,
+                -l_op * (self.value ** (-2)),
+                2 * l_op * (self.value ** (-3)),
+            ))
+            return out
         return NotImplemented
 
     def __pow__(self, r_op: Any):
@@ -215,8 +238,8 @@ class Variable:
 
         for nxt_var, nxt_grad_1st, nxt_grad_2nd in self.bp_graph:
             # Initial gradients are scaled by 1.0.
-            nxt_var.grad_1st = nxt_grad_1st
-            nxt_var.grad_2nd = nxt_grad_2nd
+            nxt_var.grad_1st += nxt_grad_1st
+            nxt_var.grad_2nd += nxt_grad_2nd
             q.put((
                 # Next variable's priority in queue.
                 -nxt_var.priority,
