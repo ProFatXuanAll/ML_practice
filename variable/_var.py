@@ -248,6 +248,86 @@ class Variable:
             return out
         return NotImplemented
 
+    def __neg__(self):
+        r"""Negation operation ``-self``."""
+        out = Variable(-self.val)
+        out.bp_graph.append((self, -1.0))
+        out.priority = self.priority + 1
+        return out
+
+    def __pos__(self):
+        r"""Positive operation ``+self``."""
+        return self
+
+    def __abs__(self):
+        r"""Absolute value operation ``abs(self)``."""
+        out = Variable(abs(self.val))
+        out.bp_graph.append((self, (-1.0) ** (self.val < 0)))
+        out.priority = self.priority + 1
+        return out
+
+    def __copy__(self):
+        r"""Copy all attributes but only reference backward pass graph."""
+        out = Variable(self.val)
+        out.priority = self.priority
+        out.grad = self.grad
+        out.bp_graph = self.bp_graph[:]
+        return out
+
+    def __deepcopy__(self, memodict={}):
+        r"""Copy all attributes and all varialbes in backward pass graph."""
+        out = Variable(self.val)
+        out.priority = self.priority
+        out.grad = self.grad
+
+        q = PriorityQueue()
+        # Repeatly using copied instance.
+        is_put = {id(self): out}
+
+        for nxt_var, nxt_grad in self.bp_graph:
+            # Not yet copy variable.
+            if id(nxt_var) not in is_put:
+                nxt_var_cp = Variable(nxt_var.val)
+                nxt_var_cp.priority = nxt_var.priority
+                nxt_var_cp.grad = nxt_var.grad
+                nxt_var_cp.bp_graph = nxt_var.bp_graph
+                # Temperally reference old graph, later on create copy.
+                out.bp_graph.append((nxt_var_cp, nxt_grad))
+
+                # Sort by priority.
+                q.put((nxt_var_cp.priority, nxt_var_cp))
+                # Save copied reference.
+                is_put[id(nxt_var)] = nxt_var_cp
+            # Already copied variable before.
+            else:
+                out.bp_graph.append((is_put[id(nxt_var)], nxt_grad))
+
+        while not q.empty():
+            _, cur_var_cp = q.get()
+            old_bp_graph = cur_var_cp.bp_graph
+            # Replace old reference with copy.
+            cur_var_cp.bp_graph = []
+
+            for nxt_var, nxt_grad in old_bp_graph:
+                # Not yet copy variable.
+                if id(nxt_var) not in is_put:
+                    nxt_var_cp = Variable(nxt_var.val)
+                    nxt_var_cp.priority = nxt_var.priority
+                    nxt_var_cp.grad = nxt_var.grad
+                    nxt_var_cp.bp_graph = nxt_var.bp_graph
+                    # Update reference to newly copied variables.
+                    cur_var_cp.bp_graph.append((nxt_var_cp, nxt_grad))
+
+                    # Sort by priority.
+                    q.put((nxt_var_cp.priority, nxt_var_cp))
+                    # Save copied reference.
+                    is_put[id(nxt_var)] = nxt_var_cp
+                # Already copied variable before.
+                else:
+                    cur_var_cp.bp_graph.append((is_put[id(nxt_var)], nxt_grad))
+
+        return out
+
     def backward_pass(self):
         r"""Backward pass algorithm."""
         q = PriorityQueue()
@@ -256,13 +336,15 @@ class Variable:
         for nxt_var, nxt_grad in self.bp_graph:
             # Initial gradients are scaled by 1.0.
             nxt_var.grad += nxt_grad
-            q.put((
-                # Next variable's priority in queue.
-                -nxt_var.priority,
-                # Next variable's reference.
-                nxt_var,
-            ))
-            is_put[id(nxt_var)] = True
+
+            if id(nxt_var) not in is_put:
+                q.put((
+                    # Next variable's priority in queue.
+                    -nxt_var.priority,
+                    # Next variable's reference.
+                    nxt_var,
+                ))
+                is_put[id(nxt_var)] = True
 
         # Travel backward pass graph which order was based on forward priority.
         while not q.empty():
@@ -308,17 +390,3 @@ class Variable:
                 q.put(nxt_var)
 
             cur_var.bp_graph.clear()
-
-
-def coerce(value: Any) -> Variable:
-    r"""Coerce value into ``Variable``."""
-    if isinstance(value, Variable):
-        return value
-    elif isinstance(value, (float, int)):
-        return Variable(value)
-    else:
-        raise TypeError(f'{type(value)} is not compatible with ``Variable``.')
-
-
-def copy(var: Variable):
-    return Variable(var.val)

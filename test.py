@@ -1,9 +1,10 @@
-import variables
+import copy
+import variable
 
-a = variables.Variable(2)
-b = variables.Variable(3)
-c = variables.Variable(4)
-d = variables.Variable(5)
+a = variable.Variable(2)
+b = variable.Variable(3)
+c = variable.Variable(4)
+d = variable.Variable(5)
 
 print(a == a)
 print(a == b)
@@ -24,6 +25,7 @@ print(2 * a)
 print(3 - a)
 print(4 / a)
 print(5 ** a)
+print(abs(+-a))
 
 # h1 = a + b
 # h2 = c + d
@@ -41,17 +43,17 @@ print(5 ** a)
 
 # h4.backward_pass()
 
-# print(f'h4 gd1: {h4.grad_1st}, should be {0.0}')
-# print(f'h3 gd1: {h3.grad_1st}, should be {1.0}')
-# print(f'h2 gd1: {h2.grad_1st}, should be {2.0}')
-# print(f'h1 gd1: {h1.grad_1st}, should be {3.0}')
-# print(f'a gd1: {a.grad_1st}, should be {8.0}')
+# print(f'h4 gd1: {h4.grad}, should be {0.0}')
+# print(f'h3 gd1: {h3.grad}, should be {1.0}')
+# print(f'h2 gd1: {h2.grad}, should be {2.0}')
+# print(f'h1 gd1: {h1.grad}, should be {3.0}')
+# print(f'a gd1: {a.grad}, should be {8.0}')
 
-h1 = a - b
-h2 = c - d
-out = h1 * h2
+# h1 = a - b
+# h2 = c - d
+# out = h1 * h2
 
-out.backward_pass()
+# out.backward_pass()
 
 # h1 = a * a
 # h1.backward_pass()
