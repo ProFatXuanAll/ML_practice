@@ -1,3 +1,4 @@
+import math
 from queue import Queue, PriorityQueue
 from typing import Any, List, Tuple
 
@@ -101,134 +102,167 @@ class Variable:
 
     def __add__(self, r_op: Any):
         r"""Addition operation ``self + r_op``."""
-        out = Variable(self.value)
-        out.bp_graph.append((self, 1.0, 0.0))
-        out.priority = self.priority + 1
+        out = Variable(0.0)
 
         if isinstance(r_op, Variable):
-            out.value = out.value + r_op.value
+            out.value = self.value + r_op.value
+            out.bp_graph.append((self, 1.0, 0.0))
             out.bp_graph.append((r_op, 1.0, 0.0))
-            out.priority = max(out.priority, r_op.priority + 1)
+            out.priority = max(self.priority, r_op.priority) + 1
         elif isinstance(r_op, (float, int)):
-            out.value = out.value + r_op
+            out.value = self.value + r_op
+            out.bp_graph.append((self, 1.0, 0.0))
+            out.priority = self.priority + 1
         else:
             return NotImplemented
         return out
 
     def __radd__(self, l_op: Any):
         r"""Addition operation ``l_op + self``."""
-        out = Variable(self.value)
-        out.bp_graph.append((self, 1.0, 0.0))
-        out.priority = self.priority + 1
+        out = Variable(0.0)
 
         if isinstance(l_op, (float, int)):
-            out.value += l_op
+            out.value = l_op + self.value
+            out.bp_graph.append((self, 1.0, 0.0))
+            out.priority = self.priority + 1
             return out
         return NotImplemented
 
     def __mul__(self, r_op: Any):
         r"""Multiplication operation ``self * r_op``."""
-        out = Variable(self.value)
-        out.priority = self.priority + 1
+        out = Variable(0.0)
 
         if isinstance(r_op, Variable):
-            out.value = out.value * r_op.value
+            out.value = self.value * r_op.value
             out.bp_graph.append((self, r_op.value, 0.0))
             out.bp_graph.append((r_op, self.value, 0.0))
-            out.priority = max(out.priority, r_op.priority + 1)
+            out.priority = max(self.priority, r_op.priority) + 1
         elif isinstance(r_op, (float, int)):
-            out.value = out.value * r_op
+            out.value = self.value * r_op
             out.bp_graph.append((self, r_op, 0.0))
+            out.priority = self.priority + 1
         else:
             return NotImplemented
         return out
 
     def __rmul__(self, l_op: Any):
         r"""Multiplication operation ``l_op * self``."""
-        out = Variable(self.value)
-        out.priority = self.priority + 1
+        out = Variable(0.0)
 
         if isinstance(l_op, (float, int)):
-            out.value = out.value * l_op
+            out.value = l_op * self.value
             out.bp_graph.append((self, l_op, 0.0))
+            out.priority = self.priority + 1
             return out
         return NotImplemented
 
     def __sub__(self, r_op: Any):
         r"""Subtraction operation ``self - r_op``."""
-        out = Variable(self.value)
-        out.bp_graph.append((self, 1.0, 0.0))
-        out.priority = self.priority + 1
+        out = Variable(0.0)
 
         if isinstance(r_op, Variable):
-            out.value = out.value - r_op.value
+            out.value = self.value - r_op.value
+            out.bp_graph.append((self, 1.0, 0.0))
             out.bp_graph.append((r_op, -1.0, 0.0))
-            out.priority = max(out.priority, r_op.priority + 1)
+            out.priority = max(self.priority, r_op.priority) + 1
         elif isinstance(r_op, (float, int)):
-            out.value = out.value - r_op
+            out.value = self.value - r_op
+            out.bp_graph.append((self, 1.0, 0.0))
+            out.priority = self.priority + 1
         else:
             return NotImplemented
         return out
 
     def __rsub__(self, l_op: Any):
         r"""Subtraction operation ``l_op - self``."""
-        out = Variable(-self.value)
-        out.bp_graph.append((self, -1.0, 0.0))
-        out.priority = self.priority + 1
+        out = Variable(0.0)
 
         if isinstance(l_op, (float, int)):
-            out.value = out.value + l_op
+            out.value = l_op - self.value
+            out.bp_graph.append((self, -1.0, 0.0))
+            out.priority = self.priority + 1
             return out
         return NotImplemented
 
     def __truediv__(self, r_op: Any):
         r"""Division operation ``self / r_op``."""
-        out = Variable(self.value)
-        out.priority = self.priority + 1
+        out = Variable(0.0)
 
         if isinstance(r_op, Variable):
-            out.value = out.value / r_op.value
+            out.value = self.value / r_op.value
             out.bp_graph.append((self, 1 / r_op.value, 0.0))
             out.bp_graph.append((
                 r_op,
                 -self.value * (r_op.value ** (-2)),
                 2 * self.value * (r_op.value ** (-3)),
             ))
-            out.priority = max(out.priority, r_op.priority + 1)
+            out.priority = max(self.priority, r_op.priority) + 1
         elif isinstance(r_op, (float, int)):
-            out.value = out.value / r_op
+            out.value = self.value / r_op
             out.bp_graph.append((self, 1 / r_op, 0.0))
+            out.priority = self.priority + 1
         else:
             return NotImplemented
         return out
 
     def __rtruediv__(self, l_op: Any):
         r"""Division operation ``l_op / self``."""
-        out = Variable(self.value)
-        out.priority = self.priority + 1
+        out = Variable(0.0)
 
         if isinstance(l_op, (float, int)):
-            out.value = l_op / out.value
+            out.value = l_op / self.value
             out.bp_graph.append((
                 self,
                 -l_op * (self.value ** (-2)),
                 2 * l_op * (self.value ** (-3)),
             ))
+            out.priority = self.priority + 1
             return out
         return NotImplemented
 
     def __pow__(self, r_op: Any):
         r"""Exponential operation ``self ** r_op``."""
+        out = Variable(0.0)
+
         if isinstance(r_op, Variable):
-            return Variable(self.value ** r_op.value)
+            out.value = self.value ** r_op.value
+            out.bp_graph.append((
+                self,
+                r_op.value * (self.value ** (r_op.value - 1)),
+                r_op.value * (r_op.value - 1) *
+                (self.value ** (r_op.value - 2)),
+            ))
+            out.bp_graph.append((
+                r_op,
+                math.log(self.value) * (self.value ** r_op.value),
+                math.log(self.value ** 2) * (self.value ** r_op.value),
+            ))
+            out.priority = max(self.priority, r_op.priority) + 1
         elif isinstance(r_op, (float, int)):
-            return Variable(self.value ** r_op)
-        return NotImplemented
+            out.value = self.value ** r_op
+            out.bp_graph.append((
+                self,
+                r_op * (self.value ** (r_op - 1)),
+                r_op * (r_op - 1) * (self.value ** (r_op - 2)),
+            ))
+            out.priority = self.priority + 1
+        else:
+            return NotImplemented
+        return out
 
     def __rpow__(self, l_op: Any):
         r"""Exponential operation ``l_op ** self``."""
+        out = Variable(0.0)
+
         if isinstance(l_op, (float, int)):
-            return Variable(l_op ** self.value)
+            out.value = l_op ** self.value
+            out.bp_graph.append((
+                self,
+                self.value * (r_op ** (self.value - 1)),
+                self.value * (self.value - 1) * (r_op ** (self.value - 2)),
+            ))
+            out.priority = self.priority + 1
+            return out
         return NotImplemented
 
     def backward_pass(self):
