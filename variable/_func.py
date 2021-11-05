@@ -3,7 +3,7 @@ from variable._var import Variable
 
 
 def relu(var: Variable) -> Variable:
-    return coerce(var).max(0)
+    return coerce(var).max(0.0)
 
 
 def sigmoid(var: Variable) -> Variable:
