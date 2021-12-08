@@ -398,7 +398,7 @@ class Variable:
                 out.bp_graph.append((r_op, 1.0))
             out.priority = max(self.priority, r_op.priority) + 1
         elif isinstance(r_op, (float, int)):
-            out.val = max(self.val, r_op)
+            out.val = max(self.val, float(r_op))
             if out.val == self.val:
                 out.bp_graph.append((self, 1.0))
             else:
@@ -422,7 +422,7 @@ class Variable:
                 out.bp_graph.append((r_op, 1.0))
             out.priority = max(self.priority, r_op.priority) + 1
         elif isinstance(r_op, (float, int)):
-            out.val = min(self.val, r_op)
+            out.val = min(self.val, float(r_op))
             if out.val == self.val:
                 out.bp_graph.append((self, 1.0))
             else:
